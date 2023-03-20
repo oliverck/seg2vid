@@ -23,7 +23,7 @@ class flowgen(object):
         dataset = 'cityscapes_seq_full'
         self.workspace = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
 
-        self.jobname = dataset + '_gpu8_refine_genmask_linklink_256_1node'
+        self.jobname = self.opt.task
         self.modeldir = self.jobname + 'model'
         self.sampledir = os.path.join(self.workspace, self.jobname)
         self.parameterdir = self.sampledir + '/params'

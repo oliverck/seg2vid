@@ -5,7 +5,7 @@ def parse_opts():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--batch_size',
-        default=16,
+        default=4,
         type=int,
         help='batch size')
     parser.add_argument(
@@ -20,7 +20,7 @@ def parse_opts():
         help='weight of reconstruction loss.')
     parser.add_argument(
         '--input_size',
-        default=(128, 256),
+        default=(128, 128),
         type=tuple,
         help='input image size')
     parser.add_argument(
@@ -94,6 +94,12 @@ def parse_opts():
         default='',
         type=str,
         help='model suffix'
+    )
+    parser.add_argument(
+        '--task',
+        default='',
+        type=str,
+        help='task name'
     )
 
     args = parser.parse_args()

@@ -3,7 +3,7 @@ from torch.autograd import Variable as Vb
 import torch.optim as optim
 from torch.utils.data import DataLoader
 import os, time, sys
-
+# os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 from models.multiframe_genmask import *
 from utils import utils
 from utils import ops
@@ -19,10 +19,10 @@ class flowgen(object):
 
     def __init__(self, opt):
         self.opt = opt
-        dataset = 'cityscapes_seq_full'
+        dataset = 'eyes'
         self.workspace = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
 
-        self.jobname = dataset + '_gpu8_refine_genmask_linklink_256_1node'
+        self.jobname = self.opt.task
         self.modeldir = self.jobname + 'model'
         self.sampledir = os.path.join(self.workspace, self.jobname)
         self.parameterdir = self.sampledir + '/params'
@@ -57,8 +57,9 @@ class flowgen(object):
         iteration = 0
 
         vae = VAE(hallucination=self.useHallucination, opt=opt).cuda()
-        if torch.cuda.device_count() > 1:
-            vae = nn.DataParallel(vae).cuda()
+        # if torch.cuda.device_count() > 1:
+        #     vae = nn.DataParallel(vae).cuda()
+        vae = nn.DataParallel(vae).cuda()
 
         objective_func = losses.losses_multigpu_only_mask(opt, vae.module.floww)
 
@@ -85,7 +86,7 @@ class flowgen(object):
             print('Epoch {}/{}'.format(epoch, opt.num_epochs - 1))
             print('-' * 10)
 
-            for sample, _ in iter(self.trainloader):
+            for sample, _ in self.trainloader:
 
                 # get the inputs
                 data = sample.cuda()
@@ -130,41 +131,40 @@ class flowgen(object):
                         .format(iteration, epoch, reconloss.item(), reconloss_back.item(), reconloss_before.item(),
                                 flowloss.item(), flowcon.item(),
                                 kldloss.item(), sim_loss.item(), vgg_loss.item(), mask_loss.item(), end - start))
+                #iteration += 1
 
-                if iteration % 500 == 0:
-                    utils.save_samples(data, y_pred_before_refine, y_pred, flow, mask_fw, mask_bw, iteration,
-                                       self.sampledir, opt)
+            if epoch % 20 == 0:
+                utils.save_samples(data, y_pred_before_refine, y_pred, flow, mask_fw, mask_bw, epoch,
+                                    self.sampledir, opt)
 
-                if iteration % 2000 == 0:
-                    # Set to evaluation mode (randomly sample z from the whole distribution)
-                    with torch.no_grad():
-                        vae.eval()
-                        val_sample, _, _ = iter(self.testloader).next()
-
+            if epoch % 5 == 0:
+                # Set to evaluation mode (randomly sample z from the whole distribution)
+                with torch.no_grad():
+                    vae.eval()
+                    for val_sample, _ in self.testloader:
                         # Read data
                         data = val_sample.cuda()
                         frame1 = data[:, 0, :, :, :]
 
                         noise_bg = torch.randn(frame1.size()).cuda()
                         y_pred_before_refine, y_pred, mu, logvar, flow, flowback, mask_fw, mask_bw = vae(frame1, data,
-                                                                                                         noise_bg)
+                                                                                                            noise_bg)
 
-                    utils.save_samples(data, y_pred_before_refine, y_pred, flow, mask_fw, mask_bw, iteration,
-                                       self.sampledir, opt,
-                                       eval=True, useMask=True)
+                utils.save_samples(data, y_pred_before_refine, y_pred, flow, mask_fw, mask_bw, epoch,
+                                    self.sampledir, opt,
+                                    eval=True, useMask=True)
 
-                    # Save model's parameter
-                    checkpoint_path = self.sampledir + '/{:06d}_model.pth.tar'.format(iteration)
-                    print("model saved to {}".format(checkpoint_path))
+                # Save model's parameter
+                checkpoint_path = self.sampledir + '/{:06d}_model.pth.tar'.format(epoch)
+                print("model saved to {}".format(checkpoint_path))
 
-                    if torch.cuda.device_count() > 1:
-                        torch.save({'vae': vae.state_dict(), 'optimizer': optimizer.state_dict()},
-                                   checkpoint_path)
-                    else:
-                        torch.save({'vae': vae.module.state_dict(), 'optimizer': optimizer.state_dict()},
-                                   checkpoint_path)
-
-                iteration += 1
+                if torch.cuda.device_count() > 1:
+                    torch.save({'vae': vae.state_dict(), 'optimizer': optimizer.state_dict()},
+                                checkpoint_path)
+                else:
+                    torch.save({'vae': vae.module.state_dict(), 'optimizer': optimizer.state_dict()},
+                                checkpoint_path)
+            
 
 
 if __name__ == '__main__':

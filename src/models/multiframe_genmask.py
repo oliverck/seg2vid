@@ -239,7 +239,7 @@ class VAE(nn.Module):
         frame2 = data[:, 1:, :, :, :]
 
         opt = self.opt
-
+        #print(f'frame2 shape: {frame2.shape}')
         y = torch.cat(
             [frame1, frame2.contiguous().view(-1, opt.num_predicted_frames * opt.input_channel, opt.input_size[0],
                                               opt.input_size[1]) -

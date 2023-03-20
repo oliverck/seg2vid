@@ -25,3 +25,8 @@ KTH_DATA_PATH = '/panjunting/kth/KTH/processed'
 UCF_101_DATA_PATH = '/panjunting/f2video2.0/UCF-101'
 
 KITTI_DATA_PATH = '/panjunting/kitti'
+
+
+EYES_DATA_PATH = '/home/wzp/workplace/dataset/video-cell'
+EYES_TRAINLIST_PATH = '/home/wzp/workplace/dataset/trainlist.txt'
+EYES_TESTLIST_PATH = '/home/wzp/workplace/dataset/testlist.txt'

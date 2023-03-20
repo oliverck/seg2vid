@@ -7,7 +7,7 @@ import random
 import cv2
 import re
 import time
-from scipy.misc import imread
+# from scipy.misc import imread
 random.seed(1234)
 
 

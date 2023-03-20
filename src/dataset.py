@@ -2,7 +2,7 @@ from datasets.dataset_path import *
 import os
 
 def get_training_set(opt):
-    assert opt.dataset in ['cityscapes', 'cityscapes_two_path', 'kth']
+    assert opt.dataset in ['cityscapes', 'cityscapes_two_path', 'kth', 'eyes' ,'eyes_inverse', 'eyes_mask']
 
     if opt.dataset == 'cityscapes':
         from datasets.cityscapes_dataset_w_mask import Cityscapes
@@ -25,12 +25,25 @@ def get_training_set(opt):
         train_Dataset = KTH(dataset_root=KTH_DATA_PATH,
                             datalist=KTH_DATA_PATH_LIST,
                             size=opt.input_size, num_frames=opt.num_frames)
+    
+    elif opt.dataset == 'eyes':
+        from datasets.eyes_dataset import Eyes
+        train_Dataset = Eyes(EYES_DATA_PATH, EYES_TRAINLIST_PATH, size=opt.input_size, num_frames=opt.num_frames, returnpath=True)
+
+    elif opt.dataset == 'eyes_mask':
+        from datasets.eyes_dataset_w_mask import Eyes
+        train_Dataset = Eyes(EYES_DATA_PATH, EYES_TRAINLIST_PATH, size=opt.input_size, num_frames=opt.num_frames, returnpath=True)    
+
+    elif opt.dataset == 'eyes_inverse':
+        from datasets.eyes_dataset_inverse import EyesInverse
+        train_Dataset = EyesInverse(EYES_DATA_PATH, EYES_TRAINLIST_PATH, size=opt.input_size, num_frames=opt.num_frames, returnpath=True)
+
 
     return train_Dataset
 
 
 def get_test_set(opt):
-    assert opt.dataset in ['cityscapes', 'cityscapes_two_path', 'kth', 'ucf101', 'KITTI']
+    assert opt.dataset in ['cityscapes', 'cityscapes_two_path', 'kth', 'ucf101', 'KITTI', 'eyes', 'eyes_inverse', 'eyes_mask']
 
     if opt.dataset == 'cityscapes':
         from datasets.cityscapes_dataset_w_mask import Cityscapes
@@ -71,5 +84,17 @@ def get_test_set(opt):
         test_Dataset = UCF101(datapath=os.path.join(UCF_101_DATA_PATH, opt.category),
                               datalist=os.path.join(UCF_101_DATA_PATH, 'list/test%s.txt' % (opt.category.lower())),
                               returnpath=True)
+    
+    elif opt.dataset == 'eyes':
+        from datasets.eyes_dataset import Eyes
+        test_Dataset = Eyes(EYES_DATA_PATH, EYES_TESTLIST_PATH, size=opt.input_size, num_frames=opt.num_frames, returnpath=True)
+
+    elif opt.dataset == 'eyes_mask':
+        from datasets.eyes_dataset_w_mask import Eyes
+        test_Dataset = Eyes(EYES_DATA_PATH, EYES_TRAINLIST_PATH, size=opt.input_size, num_frames=opt.num_frames, returnpath=True)
+
+    elif opt.dataset == 'eyes_inverse':
+        from datasets.eyes_dataset_inverse import EyesInverse
+        test_Dataset = EyesInverse(EYES_DATA_PATH, EYES_TRAINLIST_PATH, size=opt.input_size, num_frames=opt.num_frames, returnpath=True)
 
     return test_Dataset

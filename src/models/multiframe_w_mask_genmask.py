@@ -197,7 +197,7 @@ class VAE(nn.Module):
         self.opt = opt
         self.hallucination = hallucination
 
-        self.motion_net = motion_net(opt, int(opt.num_frames*opt.input_channel)+20, 1024)
+        self.motion_net = motion_net(opt, int(opt.num_frames*opt.input_channel)+self.opt.mask_channel, 1024)
 
         self.encoder = encoder(opt)
         self.flow_decoder = decoder(opt)
@@ -240,7 +240,6 @@ class VAE(nn.Module):
         frame2 = data[:, 1:, :, :, :]
         input = torch.cat([x, mask], 1)
         opt = self.opt
-
         y = torch.cat(
             [frame1, frame2.contiguous().view(-1, opt.num_predicted_frames * opt.input_channel, opt.input_size[0], opt.input_size[1]) 
              - frame1.repeat(1, opt.num_predicted_frames, 1, 1)], 1)
